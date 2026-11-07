@@ -1,26 +1,160 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --paper: #f4ede0;
+  --paper-dot: #dccfb6;
+  --leather: #5a3925;
+  --leather-dot: rgba(0, 0, 0, 0.2);
+  --stitch: rgba(233, 201, 136, 0.45);
+  --gold: #e9c988;
+  --ink: #241c17;
+  --ink-soft: #6b5b4e;
+  --stamp: #b8341f;
+  --card: #fffdf8;
+  --line: #e2d6c0;
+  --margin: #e3a6a0;
+  --hit: #3e8e5e;
+  --beige: #e6dcc8;
+  --tape: rgba(236, 199, 92, 0.72);
+
+  --frame-diamond: linear-gradient(135deg, #9be7f0, #c9b6ff 38%, #ffc2e2 62%, #a8f0d0);
+  --frame-platinum: linear-gradient(135deg, #eef2f6, #aeb9c6 45%, #f7f9fb 60%, #97a3b2);
+  --frame-gold: linear-gradient(135deg, #f7d774, #c9932b 45%, #fbe6a2 60%, #b07d1e);
+  --frame-silver: linear-gradient(135deg, #e6e8eb, #9ea3aa 50%, #d4d7db);
+  --frame-bronze: linear-gradient(135deg, #e6a87a, #9c5a2e 50%, #d4905f);
+  --frame-common: linear-gradient(135deg, #ffffff, #ede7da);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-leather: var(--leather);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-stamp: var(--stamp);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-margin: var(--margin);
+  --color-hit: var(--hit);
+  --color-beige: var(--beige);
+
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-mono: var(--font-courier), "Courier New", monospace;
+  --font-hand: var(--font-caveat), cursive;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background-color: var(--paper);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--paper-dot) 1px, transparent 1.2px);
+  background-size: 16px 16px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+}
+
+/* Cabeçalho de couro com costura tracejada */
+.leather {
+  position: relative;
+  background-color: var(--leather);
+  background-image: radial-gradient(var(--leather-dot) 1px, transparent 1.2px);
+  background-size: 4px 4px;
+  border-radius: 0 0 22px 22px;
+  color: var(--gold);
+}
+.leather::after {
+  content: "";
+  position: absolute;
+  inset: -2px 8px 8px 8px;
+  border: 1.5px dashed var(--stitch);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  pointer-events: none;
+}
+
+/* Molduras das figurinhas */
+.frame {
+  position: relative;
+  border-radius: 14px;
+  padding: 7px;
+  background: var(--frame);
+  box-shadow: 0 6px 16px rgba(36, 28, 23, 0.16), 0 1px 2px rgba(36, 28, 23, 0.18);
+}
+.frame-diamond { --frame: var(--frame-diamond); }
+.frame-platinum { --frame: var(--frame-platinum); }
+.frame-gold { --frame: var(--frame-gold); }
+.frame-silver { --frame: var(--frame-silver); }
+.frame-bronze { --frame: var(--frame-bronze); }
+.frame-common {
+  --frame: var(--frame-common);
+  box-shadow: 0 6px 16px rgba(36, 28, 23, 0.12), inset 0 0 0 1px var(--line);
+}
+.frame-empty {
+  background: transparent;
+  box-shadow: none;
+  border: 2px dashed #c9b99c;
+}
+/* Brilho diagonal das metálicas */
+.frame-metallic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, transparent 32%, rgba(255, 255, 255, 0.55) 46%, transparent 58%);
+  pointer-events: none;
+}
+
+/* Fita adesiva da figurinha do jogo */
+.tape {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 62%;
+  height: 22px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: var(--tape);
+  box-shadow: 0 1px 2px rgba(36, 28, 23, 0.12);
+  z-index: 2;
+}
+
+/* Cantoneiras escuras das figurinhas do álbum */
+.corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #3a2618;
+  z-index: 2;
+}
+.corner-tl { top: -4px; left: -4px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+.corner-tr { top: -4px; right: -4px; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.corner-bl { bottom: -4px; left: -4px; clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.corner-br { bottom: -4px; right: -4px; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+/* Fichas das pistas */
+.clue-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--margin);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(36, 28, 23, 0.06);
+}
+.clue-closed {
+  border: 1.5px dashed #d2c3a5;
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-in {
+    animation: reveal-in 420ms ease-out both;
+  }
+  @keyframes reveal-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
 }
