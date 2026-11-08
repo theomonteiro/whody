@@ -69,7 +69,7 @@
     "streakLabel": "{count, plural, one {dia seguido} other {dias seguidos}}",
     "albumButton": "Ver álbum da semana",
     "learnMore": "Saiba mais sobre {name}",
-    "clueSource": "fonte",
+    "clueSource": "{count, plural, one {fonte} other {fonte {n}}}",
     "clueSourceMissing": "fonte em breve",
     "clueLabel": "Pista {position}"
   },

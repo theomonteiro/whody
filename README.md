@@ -44,7 +44,7 @@ O conteúdo vive em [`content/people.ts`](content/people.ts). O banco é só uma
    - `id`: slug estável, ex. `"santos-dumont"`. Não mude depois de agendar.
    - `acceptedNames`: nome completo, nome artístico e apelidos. Acento e caixa não importam.
    - `shortBio`, `years`, `portraitUrl` (`null` usa o busto genérico em polígonos).
-   - `clues`: exatamente 6, da mais obscura (1) à mais óbvia (6), cada uma com `sourceUrl` (aparece em "Saiba mais" no resultado).
+   - `clues`: exatamente 6, da mais obscura (1) à mais óbvia (6), cada uma com `sources`: a lista de links que comprovam a pista (aparecem em "Saiba mais" no resultado). Fato surpreendente, número ou citação pede 2 fontes independentes.
 2. Agende em `schedule`: `{ date: "2026-11-14", personId: "..." }`. A data é no fuso de Brasília. O número do dia (#1, #2…) sai da data, contando a partir de `PUZZLE_EPOCH` em `lib/time.ts`.
 3. Rode `npm run db:seed`, apontando `DATABASE_URL` pro banco certo (o de produção, pra valer no site).
 

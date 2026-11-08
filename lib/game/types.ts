@@ -12,7 +12,7 @@ export type Reveal = {
   shortBio: string;
   years: string;
   portraitUrl: string | null;
-  sources: { position: number; text: string; sourceUrl: string | null }[];
+  sources: { position: number; text: string; urls: string[] }[];
 };
 
 export type GameStatus = "playing" | "solved" | "failed";

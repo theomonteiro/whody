@@ -14,6 +14,12 @@ function validate(): string[] {
     ids.add(p.id);
     if (p.clues.length !== 6) errors.push(`${p.id}: precisa de 6 pistas`);
     if (p.acceptedNames.length === 0) errors.push(`${p.id}: sem nomes aceitos`);
+    p.clues.forEach((c, i) => {
+      for (const url of c.sources) {
+        if (!/^https?:\/\//.test(url)) errors.push(`${p.id}, pista ${i + 1}: fonte inválida "${url}"`);
+      }
+      if (c.sources.length === 0 && !hasTodo(p)) console.warn(`aviso: ${p.id}, pista ${i + 1} sem fonte.`);
+    });
     for (const name of p.acceptedNames) {
       const n = normalize(name);
       if (!n) errors.push(`${p.id}: nome aceito vazio`);
@@ -60,8 +66,8 @@ async function main() {
       await tx`delete from clues where person_id = ${p.id} and locale = ${p.locale}`;
       for (const [i, c] of p.clues.entries()) {
         await tx`
-          insert into clues (person_id, position, text, source_url, locale)
-          values (${p.id}, ${i + 1}, ${c.text}, ${c.sourceUrl}, ${p.locale})`;
+          insert into clues (person_id, position, text, source_urls, locale)
+          values (${p.id}, ${i + 1}, ${c.text}, ${c.sources}, ${p.locale})`;
       }
     }
 

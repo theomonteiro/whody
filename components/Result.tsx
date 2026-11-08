@@ -99,15 +99,20 @@ export function Result({ state }: { state: GameState }) {
                 </span>
                 <div>
                   <p className="text-ink">{s.text}</p>
-                  {s.sourceUrl ? (
-                    <a
-                      href={s.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-stamp underline underline-offset-2"
-                    >
-                      {t("result.clueSource")}
-                    </a>
+                  {s.urls.length > 0 ? (
+                    <p className="mt-1 flex flex-wrap gap-x-4">
+                      {s.urls.map((url, i) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center text-sm font-bold text-stamp underline underline-offset-2"
+                        >
+                          {t("result.clueSource", { n: i + 1, count: s.urls.length })}
+                        </a>
+                      ))}
+                    </p>
                   ) : (
                     <p className="mt-1 text-sm text-ink-soft">{t("result.clueSourceMissing")}</p>
                   )}

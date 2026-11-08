@@ -102,8 +102,8 @@ export async function buildState(playerId: string | null, puzzle: Puzzle): Promi
 
   // Só busca no banco o texto das pistas que o jogador já pode ver.
   const visible = finished ? CLUE_COUNT : open;
-  const clueRows = await sql<{ position: number; text: string; source_url: string | null }[]>`
-    select position, text, source_url from clues
+  const clueRows = await sql<{ position: number; text: string; source_urls: string[] }[]>`
+    select position, text, source_urls from clues
     where person_id = ${puzzle.person_id} and locale = ${defaultLocale} and position <= ${visible}
     order by position`;
   const textByPosition = new Map(clueRows.map((c) => [c.position, c.text]));
@@ -125,7 +125,7 @@ export async function buildState(playerId: string | null, puzzle: Puzzle): Promi
       shortBio: person.short_bio,
       years: person.years,
       portraitUrl: person.portrait_url,
-      sources: clueRows.map((c) => ({ position: c.position, text: c.text, sourceUrl: c.source_url })),
+      sources: clueRows.map((c) => ({ position: c.position, text: c.text, urls: c.source_urls })),
     };
   }
 
