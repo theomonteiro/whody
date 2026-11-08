@@ -56,7 +56,7 @@ export const people: Person[] = [
     acceptedNames: ["santos dumont", "alberto santos dumont", "dumont"],
     shortBio: "Aviador e inventor",
     years: "1873–1932",
-    portraitUrl: null,
+    portraitUrl: "/portraits/santos-dumont.svg",
     clues: [
       {
         text: "Pediu a um amigo joalheiro um relógio que desse para usar no pulso. O modelo virou peça de luxo e é vendido até hoje.",
@@ -97,7 +97,7 @@ export const people: Person[] = [
     acceptedNames: ["machado de assis", "joaquim maria machado de assis", "machado"],
     shortBio: "Escritor",
     years: "1839–1908",
-    portraitUrl: null,
+    portraitUrl: "/portraits/machado-de-assis.svg",
     clues: [
       {
         text: "Aos 17 anos, arrumou emprego como aprendiz de tipógrafo e passou a escrever nas horas vagas.",

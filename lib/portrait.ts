@@ -1,14 +1,18 @@
 // Busto genérico low-poly (3:4), no tom da raridade. Usado pelo <Portrait> e pelas imagens de prévia.
 import type { Rarity } from "./game/rules";
 
-export const PORTRAIT_TONES: Record<Rarity | "mystery", { bg: string; bust: string }> = {
-  diamond: { bg: "#DCF1F3", bust: "#557A82" },
-  platinum: { bg: "#DDE3EA", bust: "#6A7787" },
-  gold: { bg: "#F6E6BC", bust: "#866A2F" },
-  silver: { bg: "#E3E5E9", bust: "#767B84" },
-  bronze: { bg: "#F2DACA", bust: "#8C5D43" },
-  common: { bg: "#EEE8DD", bust: "#6B6258" },
-  mystery: { bg: "#2E241D", bust: "#4A3B30" },
+/**
+ * bg = fundo, bust = cor do busto genérico, ink = traço mais escuro dos retratos reais
+ * (os SVGs em public/portraits misturam --portrait-ink com --portrait-paper em 7 tons).
+ */
+export const PORTRAIT_TONES: Record<Rarity | "mystery", { bg: string; bust: string; ink: string }> = {
+  diamond: { bg: "#DCF1F3", bust: "#557A82", ink: "#1E3A41" },
+  platinum: { bg: "#DDE3EA", bust: "#6A7787", ink: "#27303C" },
+  gold: { bg: "#F6E6BC", bust: "#866A2F", ink: "#3D2E0E" },
+  silver: { bg: "#E3E5E9", bust: "#767B84", ink: "#2F3238" },
+  bronze: { bg: "#F2DACA", bust: "#8C5D43", ink: "#41261A" },
+  common: { bg: "#EEE8DD", bust: "#6B6258", ink: "#241C17" },
+  mystery: { bg: "#2E241D", bust: "#4A3B30", ink: "#120D0A" },
 };
 
 type Facet = { points: string; shade: number };
