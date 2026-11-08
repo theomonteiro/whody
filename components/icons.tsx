@@ -34,6 +34,15 @@ export function BackIcon({ className }: IconProps) {
   );
 }
 
+export function StopwatchIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" className={className} {...base}>
+      <circle cx="12" cy="14" r="7" />
+      <path d="M12 14V10.5M10 3h4M12 3v4M18.5 7.5l1.5-1.5" />
+    </svg>
+  );
+}
+
 export function FlameIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" className={className} {...base}>

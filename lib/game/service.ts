@@ -3,20 +3,19 @@ import type { Sql, TransactionSql } from "postgres";
 import { db } from "@/lib/db";
 import { defaultLocale } from "@/i18n/config";
 import { gameDate, isoWeekNumber, nextPuzzleAt, weekDates } from "@/lib/time";
+import { applyGuess, clueDeadline, currentClue, expire, pointsOf, type Attempt, type Timeline } from "./clock";
 import { judgeGuess, normalize } from "./judge";
 import { CLUE_COUNT, pointsForClue } from "./rules";
-import type { Album, AlbumDay, GameState, GameStatus, GuessResponse, PublicClue } from "./types";
+import type { Album, AlbumDay, GameState, GameStatus, GuessOutcome, GuessResponse, PublicClue } from "./types";
 
 const MAX_GUESS_LENGTH = 80;
 
 type Puzzle = { number: number; date: string; person_id: string };
 
-type Attempt = { guess: string; correct: boolean; at: string };
-
 type PlayRow = {
   attempts: Attempt[];
   solved_at_clue: number | null;
-  points: number;
+  started_at: Date;
   finished_at: Date | null;
 };
 
@@ -28,46 +27,84 @@ export async function getPuzzle(date: string = gameDate()): Promise<Puzzle | nul
   return row ?? null;
 }
 
-async function getPlay(q: Query, playerId: string, puzzleNumber: number): Promise<PlayRow | null> {
-  const [row] = await q<PlayRow[]>`
-    select attempts, solved_at_clue, points, finished_at
-    from plays where player_id = ${playerId} and puzzle_number = ${puzzleNumber}`;
-  return row ?? null;
+function toTimeline(play: PlayRow): Timeline {
+  return {
+    startedAt: play.started_at.getTime(),
+    attempts: play.attempts,
+    finishedAt: play.finished_at?.getTime() ?? null,
+    solvedAtClue: play.solved_at_clue,
+  };
 }
 
-function statusOf(play: PlayRow | null): GameStatus {
-  if (!play?.finished_at) return "playing";
-  return play.solved_at_clue ? "solved" : "failed";
-}
-
-/** Quantas pistas estão abertas: 1 + erros, até 6. Depois do fim, todas. */
-function openCount(play: PlayRow | null): number {
-  if (play?.finished_at) return play.solved_at_clue ?? CLUE_COUNT;
-  const wrong = play?.attempts.filter((a) => !a.correct).length ?? 0;
-  return Math.min(CLUE_COUNT, wrong + 1);
-}
-
-async function ensurePlay(q: Query, playerId: string, puzzleNumber: number) {
-  await q`insert into players (id) values (${playerId}) on conflict (id) do nothing`;
+async function savePlay(q: Query, playerId: string, puzzleNumber: number, t: Timeline) {
   await q`
-    insert into plays (player_id, puzzle_number) values (${playerId}, ${puzzleNumber})
-    on conflict (player_id, puzzle_number) do nothing`;
+    update plays set
+      attempts = ${q.json(t.attempts)},
+      solved_at_clue = ${t.solvedAtClue},
+      points = ${pointsOf(t)},
+      finished_at = ${t.finishedAt === null ? null : new Date(t.finishedAt)}
+    where player_id = ${playerId} and puzzle_number = ${puzzleNumber}`;
 }
 
-/** Marca o início do jogo do dia (a pista 1 abriu). Idempotente. */
-export async function startPlay(playerId: string, puzzleNumber: number): Promise<boolean> {
+/**
+ * Lê a partida travando a linha e aplica os tempos esgotados até `now`.
+ * O cronômetro corre no servidor: sair ou recarregar não pausa nada.
+ */
+async function lockAndExpire(tx: TransactionSql, playerId: string, puzzleNumber: number, now: number) {
+  const [play] = await tx<PlayRow[]>`
+    select attempts, solved_at_clue, started_at, finished_at from plays
+    where player_id = ${playerId} and puzzle_number = ${puzzleNumber}
+    for update`;
+  if (!play) return null;
+  const before = toTimeline(play);
+  const after = expire(before, now);
+  if (after !== before) await savePlay(tx, playerId, puzzleNumber, after);
+  return after;
+}
+
+function statusOf(t: Timeline | null): GameStatus {
+  if (!t) return "not-started";
+  if (t.finishedAt === null) return "playing";
+  return t.solvedAtClue ? "solved" : "failed";
+}
+
+/** Pistas abertas: nenhuma antes do início; 1 + erros durante; até a do acerto (ou todas) no fim. */
+function openCount(t: Timeline | null): number {
+  if (!t) return 0;
+  if (t.finishedAt !== null) return t.solvedAtClue ?? CLUE_COUNT;
+  return currentClue(t);
+}
+
+/**
+ * Cria a partida do dia e abre a pista 1 (início do cronômetro). Idempotente: tocar em
+ * "Começar" de novo, ou em outra aba, devolve a mesma partida sem reiniciar o tempo.
+ */
+export async function startPlay(playerId: string, puzzleNumber: number): Promise<GameState | null> {
   const puzzle = await getPuzzle();
-  if (!puzzle || puzzle.number !== puzzleNumber) return false;
-  await ensurePlay(db(), playerId, puzzleNumber);
-  return true;
+  if (!puzzle || puzzle.number !== puzzleNumber) return null;
+  await db().begin(async (tx) => {
+    await tx`insert into players (id) values (${playerId}) on conflict (id) do nothing`;
+    await tx`
+      insert into plays (player_id, puzzle_number, started_at) values (${playerId}, ${puzzle.number}, now())
+      on conflict (player_id, puzzle_number) do nothing`;
+  });
+  return getState(playerId, puzzle);
+}
+
+/** Estado atual do dia pro jogador, com os tempos esgotados já aplicados. */
+export async function getState(playerId: string | null, puzzle: Puzzle): Promise<GameState> {
+  const now = Date.now();
+  const timeline = playerId ? await db().begin((tx) => lockAndExpire(tx, playerId, puzzle.number, now)) : null;
+  return buildState(playerId, puzzle, timeline, now);
 }
 
 export async function getStreak(playerId: string | null, today: string = gameDate()): Promise<number> {
   if (!playerId) return 0;
   // Dias seguidos jogados (acertando ou não), contados sobre os dias que tiveram pessoa.
-  // O dia de hoje ainda sem jogo não quebra a sequência.
-  const rows = await db()<{ date: string; done: boolean }[]>`
-    select d.date::text as date, (p.finished_at is not null) as done
+  // Dia passado com partida começada conta como jogado: o cronômetro já esgotou tudo.
+  // O dia de hoje ainda sem fim não quebra a sequência.
+  const rows = await db()<{ date: string; started: boolean; finished: boolean }[]>`
+    select d.date::text as date, (p.player_id is not null) as started, (p.finished_at is not null) as finished
     from daily_puzzles d
     left join plays p on p.puzzle_number = d.number and p.player_id = ${playerId}
     where d.date <= ${today}
@@ -75,7 +112,8 @@ export async function getStreak(playerId: string | null, today: string = gameDat
     limit 1000`;
   let streak = 0;
   for (const row of rows) {
-    if (row.done) streak++;
+    const done = row.date === today ? row.finished : row.started;
+    if (done) streak++;
     else if (row.date === today) continue;
     else break;
   }
@@ -93,19 +131,26 @@ async function weekPoints(playerId: string | null, today: string): Promise<numbe
   return row.total;
 }
 
-export async function buildState(playerId: string | null, puzzle: Puzzle): Promise<GameState> {
+async function buildState(
+  playerId: string | null,
+  puzzle: Puzzle,
+  timeline: Timeline | null,
+  now: number,
+): Promise<GameState> {
   const sql = db();
-  const play = playerId ? await getPlay(sql, playerId, puzzle.number) : null;
-  const status = statusOf(play);
-  const open = openCount(play);
-  const finished = status !== "playing";
+  const status = statusOf(timeline);
+  const open = openCount(timeline);
+  const finished = status === "solved" || status === "failed";
 
-  // Só busca no banco o texto das pistas que o jogador já pode ver.
+  // Só busca no banco o texto das pistas que o jogador já pode ver (nenhuma antes do "Começar").
   const visible = finished ? CLUE_COUNT : open;
-  const clueRows = await sql<{ position: number; text: string; source_urls: string[] }[]>`
-    select position, text, source_urls from clues
-    where person_id = ${puzzle.person_id} and locale = ${defaultLocale} and position <= ${visible}
-    order by position`;
+  const clueRows =
+    visible === 0
+      ? []
+      : await sql<{ position: number; text: string; source_urls: string[] }[]>`
+          select position, text, source_urls from clues
+          where person_id = ${puzzle.person_id} and locale = ${defaultLocale} and position <= ${visible}
+          order by position`;
   const textByPosition = new Map(clueRows.map((c) => [c.position, c.text]));
 
   const clues: PublicClue[] = Array.from({ length: CLUE_COUNT }, (_, i) => {
@@ -137,12 +182,18 @@ export async function buildState(playerId: string | null, puzzle: Puzzle): Promi
     status,
     openClues: open,
     clues,
-    attempts: (play?.attempts ?? []).map((a) => ({ guess: a.guess, correct: a.correct })),
-    solvedAtClue: play?.solved_at_clue ?? null,
-    points: play?.points ?? 0,
+    attempts: (timeline?.attempts ?? []).map((a) => ({
+      guess: a.guess,
+      correct: a.correct,
+      timeout: a.timeout === true,
+    })),
+    solvedAtClue: timeline?.solvedAtClue ?? null,
+    points: timeline ? pointsOf(timeline) : 0,
     reveal,
     stats: { weekPoints: week, streak },
     nextPuzzleAt: nextPuzzleAt(),
+    clueDeadline: status === "playing" && timeline ? clueDeadline(timeline) : null,
+    serverNow: now,
   };
 }
 
@@ -156,16 +207,16 @@ export async function submitGuess(
 
   const guess = rawGuess.slice(0, MAX_GUESS_LENGTH).trim();
   const normalized = normalize(guess);
-  if (!normalized) return { outcome: "empty", state: await buildState(playerId, puzzle) };
+  const now = Date.now();
 
-  const outcome = await db().begin(async (tx) => {
-    await ensurePlay(tx, playerId, puzzle.number);
-    const [play] = await tx<PlayRow[]>`
-      select attempts, solved_at_clue, points, finished_at from plays
-      where player_id = ${playerId} and puzzle_number = ${puzzle.number}
-      for update`;
-    if (play.finished_at) return "finished" as const;
-    if (play.attempts.some((a) => normalize(a.guess) === normalized)) return "repeated" as const;
+  const { outcome, timeline } = await db().begin(async (tx) => {
+    // Os tempos esgotados entram antes: palpite atrasado vale pra pista em que o jogador está.
+    const t = await lockAndExpire(tx, playerId, puzzle.number, now);
+    const result = (o: GuessOutcome, next: Timeline | null = t) => ({ outcome: o, timeline: next });
+    if (!t) return result("not-started");
+    if (t.finishedAt !== null) return result("finished");
+    if (!normalized) return result("empty");
+    if (t.attempts.some((a) => !a.timeout && normalize(a.guess) === normalized)) return result("repeated");
 
     const people = await tx<{ id: string; accepted_names: string[] }[]>`
       select id, accepted_names from people where locale = ${defaultLocale}`;
@@ -174,22 +225,12 @@ export async function submitGuess(
     const others = people.filter((p) => p.id !== puzzle.person_id).map((p) => p.accepted_names);
     const correct = judgeGuess(guess, answer.accepted_names, others) === "correct";
 
-    const clue = openCount(play);
-    const attempts: Attempt[] = [...play.attempts, { guess, correct, at: new Date().toISOString() }];
-    const failed = !correct && clue >= CLUE_COUNT;
-
-    await tx`
-      update plays set
-        attempts = ${tx.json(attempts)},
-        solved_at_clue = ${correct ? clue : null},
-        points = ${correct ? pointsForClue(clue) : 0},
-        finished_at = ${correct || failed ? new Date() : null}
-      where player_id = ${playerId} and puzzle_number = ${puzzle.number}`;
-
-    return correct ? ("correct" as const) : failed ? ("failed" as const) : ("wrong" as const);
+    const next = applyGuess(t, guess, correct, now);
+    await savePlay(tx, playerId, puzzle.number, next);
+    return result(correct ? "correct" : next.finishedAt !== null ? "failed" : "wrong", next);
   });
 
-  return { outcome, state: await buildState(playerId, puzzle) };
+  return { outcome, state: await buildState(playerId, puzzle, timeline, now) };
 }
 
 export async function getAlbum(playerId: string | null, today: string = gameDate()): Promise<Album> {
@@ -200,13 +241,15 @@ export async function getAlbum(playerId: string | null, today: string = gameDate
       date: string;
       points: number | null;
       solved_at_clue: number | null;
+      started: boolean;
       finished: boolean;
       display_name: string;
       portrait_url: string | null;
     }[]
   >`
     select d.number, d.date::text as date, p.points, p.solved_at_clue,
-           (p.finished_at is not null) as finished, pe.display_name, pe.portrait_url
+           (p.player_id is not null) as started, (p.finished_at is not null) as finished,
+           pe.display_name, pe.portrait_url
     from daily_puzzles d
     join people pe on pe.id = d.person_id
     left join plays p on p.puzzle_number = d.number and p.player_id = ${playerId}
@@ -218,7 +261,9 @@ export async function getAlbum(playerId: string | null, today: string = gameDate
     const base = { date, number: row?.number ?? null, points: 0, solvedAtClue: null, displayName: null, portraitUrl: null };
     if (date > today) return { ...base, status: "future" };
     if (!row) return { ...base, status: "no-puzzle" };
-    if (!row.finished) return { ...base, status: date === today ? "today" : "missed" };
+    // Hoje só conta depois do fim; dia passado começado já esgotou o cronômetro.
+    const done = date === today ? row.finished : row.started;
+    if (!done) return { ...base, status: date === today ? "today" : "missed" };
     const solved = row.solved_at_clue !== null;
     return {
       ...base,
@@ -243,4 +288,3 @@ export async function getAlbum(playerId: string | null, today: string = gameDate
     daysElapsed: days.filter((d) => d.date <= today && d.status !== "no-puzzle").length,
   };
 }
-

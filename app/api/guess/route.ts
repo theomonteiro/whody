@@ -16,6 +16,6 @@ export async function POST(request: Request) {
   }
 
   const result: GuessResponse = await submitGuess(playerId, puzzleNumber, guess);
-  const status = result.outcome === "stale" ? 409 : 200;
+  const status = result.outcome === "stale" || result.outcome === "not-started" ? 409 : 200;
   return NextResponse.json(result, { status, headers: { "Cache-Control": "no-store" } });
 }

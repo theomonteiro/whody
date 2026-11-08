@@ -5,7 +5,7 @@ export type PublicClue =
   | { position: number; value: number; open: false }
   | { position: number; value: number; open: true; text: string };
 
-export type PublicAttempt = { guess: string; correct: boolean };
+export type PublicAttempt = { guess: string; correct: boolean; timeout: boolean };
 
 export type Reveal = {
   displayName: string;
@@ -15,7 +15,8 @@ export type Reveal = {
   sources: { position: number; text: string; urls: string[] }[];
 };
 
-export type GameStatus = "playing" | "solved" | "failed";
+/** "not-started": tela de início; a partida (e o cronômetro) só existe depois do "Começar". */
+export type GameStatus = "not-started" | "playing" | "solved" | "failed";
 
 export type GameState = {
   puzzle: { number: number; date: string };
@@ -28,9 +29,21 @@ export type GameState = {
   reveal: Reveal | null;
   stats: { weekPoints: number; streak: number };
   nextPuzzleAt: number;
+  /** Prazo da pista atual (ms), sem a tolerância; null fora do jogo. */
+  clueDeadline: number | null;
+  /** Relógio do servidor (ms) quando o estado foi montado, pra o cliente corrigir o próprio relógio. */
+  serverNow: number;
 };
 
-export type GuessOutcome = "correct" | "wrong" | "failed" | "empty" | "repeated" | "finished" | "stale";
+export type GuessOutcome =
+  | "correct"
+  | "wrong"
+  | "failed"
+  | "empty"
+  | "repeated"
+  | "finished"
+  | "stale"
+  | "not-started";
 
 export type GuessResponse = { outcome: GuessOutcome; state: GameState | null };
 

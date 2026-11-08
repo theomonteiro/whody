@@ -2,37 +2,57 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { CLUE_COUNT, pointsForClue, rarityForClue } from "@/lib/game/rules";
+import { CLUE_COUNT, CLUE_SECONDS, GRACE_MS, pointsForClue, rarityForClue, screenFor } from "@/lib/game/rules";
 import type { GameState, GuessResponse } from "@/lib/game/types";
-import { dateFromIso } from "@/lib/site";
-import { ChartIcon, BookIcon, FlameIcon } from "./icons";
-import { HeaderDisabledButton, HeaderLink, LeatherHeader } from "./LeatherHeader";
+import { GameHeader } from "./GameHeader";
 import { Result } from "./Result";
+import { StartScreen } from "./StartScreen";
 import { Sticker } from "./Sticker";
 
 type Feedback =
   | { kind: "wrong"; guess: string; next: number }
+  | { kind: "timeout"; next: number }
   | { kind: "repeated"; guess: string }
   | { kind: "empty" | "stale" | "error" };
 
+/** Barra vermelha nos últimos segundos. */
+const WARNING_MS = 5000;
+
 export function Game({ initial }: { initial: GameState }) {
   const [state, setState] = useState(initial);
-  const playing = state.status === "playing";
+  const screen = screenFor(true, state.status === "not-started" ? null : { started: true, finished: state.status !== "playing" });
 
-  // Marca o início do dia no servidor (a pista 1 abriu). Idempotente.
-  const puzzleNumber = state.puzzle.number;
-  const started = initial.attempts.length > 0 || initial.status !== "playing";
-  useEffect(() => {
-    if (started) return;
-    fetch("/api/play", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ puzzleNumber }),
-    }).catch(() => {});
-  }, [started, puzzleNumber]);
-
-  if (!playing) return <Result state={state} />;
+  if (screen === "start") return <StartScreen state={state} onStart={setState} />;
+  if (screen === "result") return <Result state={state} />;
   return <Board state={state} onState={setState} />;
+}
+
+/**
+ * Tempo restante da pista, pelo relógio do servidor. Fica null até montar no navegador
+ * (o HTML do servidor mostra a barra cheia), e corrige a diferença entre os relógios.
+ */
+function useRemaining(deadline: number | null, serverNow: number): number | null {
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const skewRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    skewRef.current = serverNow - Date.now();
+  }, [serverNow]);
+
+  useEffect(() => {
+    if (deadline === null) return;
+    const tick = () => setRemaining(deadline - (Date.now() + (skewRef.current ?? 0)));
+    const first = setTimeout(tick, 0);
+    const id = setInterval(tick, 200);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [deadline]);
+
+  return deadline === null ? null : remaining;
 }
 
 function Board({ state, onState }: { state: GameState; onState: (s: GameState) => void }) {
@@ -43,10 +63,41 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const newestClueRef = useRef<HTMLLIElement>(null);
+  const syncedFor = useRef<number | null>(null);
 
   const current = state.openClues;
   const rarity = rarityForClue(current)!;
   const rarityName = t(`rarity.${rarity}`);
+  const remaining = useRemaining(state.clueDeadline, state.serverNow);
+  const seconds = remaining === null ? CLUE_SECONDS : Math.max(0, Math.ceil(remaining / 1000));
+  const fraction = remaining === null ? 1 : Math.min(1, Math.max(0, remaining / (CLUE_SECONDS * 1000)));
+  const warning = remaining !== null && remaining <= WARNING_MS;
+
+  function showNewClue() {
+    requestAnimationFrame(() => newestClueRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+  }
+
+  // Quando o prazo + tolerância passa, pede ao servidor o estado com a próxima pista aberta.
+  // O texto do campo fica onde está.
+  const deadline = state.clueDeadline;
+  const expired = remaining !== null && remaining < -(GRACE_MS + 250);
+  useEffect(() => {
+    if (!expired || pending || deadline === null || syncedFor.current === deadline) return;
+    syncedFor.current = deadline;
+    fetch("/api/play", { cache: "no-store" })
+      .then((res) => res.json() as Promise<{ state?: GameState }>)
+      .then(({ state: next }) => {
+        if (!next) return;
+        if (next.status === "playing" && next.openClues > current) {
+          setFeedback({ kind: "timeout", next: next.openClues });
+          showNewClue();
+        }
+        onState(next);
+      })
+      .catch(() => {
+        syncedFor.current = null;
+      });
+  }, [expired, pending, deadline, current, onState]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -64,7 +115,7 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
         body: JSON.stringify({ puzzleNumber: state.puzzle.number, guess }),
       });
       const data = (await res.json()) as GuessResponse;
-      if (data.outcome === "stale") {
+      if (data.outcome === "stale" || data.outcome === "not-started") {
         setFeedback({ kind: "stale" });
         window.location.reload();
         return;
@@ -75,7 +126,7 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
       if (data.outcome === "wrong") {
         setFeedback({ kind: "wrong", guess: sent, next: data.state.openClues });
         setGuess("");
-        requestAnimationFrame(() => newestClueRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+        showNewClue();
       } else if (data.outcome === "repeated") {
         setFeedback({ kind: "repeated", guess: sent });
       } else if (data.outcome === "empty") {
@@ -97,6 +148,8 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
     switch (feedback.kind) {
       case "wrong":
         return t("game.wrong", { guess: feedback.guess, next: feedback.next });
+      case "timeout":
+        return t("game.timeout", { next: feedback.next });
       case "repeated":
         return t("game.repeated", { guess: feedback.guess });
       default:
@@ -106,24 +159,7 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
 
   return (
     <>
-      <LeatherHeader>
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[34px] leading-none tracking-tight text-gold">{t("brand.logo")}</h1>
-          <p className="mt-1.5 font-mono text-[13px] leading-tight font-bold text-gold">
-            {t("header.dayAndDate", {
-              number: state.puzzle.number,
-              date: format.dateTime(dateFromIso(state.puzzle.date), { weekday: "short", day: "numeric", month: "short" }),
-            })}
-          </p>
-        </div>
-        <StreakPill count={state.stats.streak} />
-        <HeaderLink href="/album" label={t("header.album")}>
-          <BookIcon />
-        </HeaderLink>
-        <HeaderDisabledButton label={t("header.group")}>
-          <ChartIcon />
-        </HeaderDisabledButton>
-      </LeatherHeader>
+      <GameHeader state={state} />
 
       <main className="flex-1 px-5 pt-7 pb-6">
         <section className="flex items-center gap-5">
@@ -160,8 +196,31 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
           </div>
         </section>
 
+        <div className="mt-5 flex items-center gap-3">
+          <div
+            className="h-2.5 flex-1 overflow-hidden rounded-full bg-beige"
+            role="progressbar"
+            aria-label={t("game.timeLeftLabel")}
+            aria-valuemin={0}
+            aria-valuemax={CLUE_SECONDS}
+            aria-valuenow={seconds}
+            aria-valuetext={t("game.timeLeft", { seconds })}
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-200 ease-linear ${warning ? "bg-stamp" : "bg-ink"}`}
+              style={{ width: `${fraction * 100}%` }}
+            />
+          </div>
+          <span
+            aria-hidden
+            className={`w-9 text-right font-mono text-base font-bold tabular-nums ${warning ? "text-stamp" : "text-ink"}`}
+          >
+            {t("game.secondsShort", { seconds })}
+          </span>
+        </div>
+
         <h2 className="sr-only">{t("game.cluesTitle")}</h2>
-        <ol className="mt-7 flex flex-col gap-2.5">
+        <ol className="mt-6 flex flex-col gap-2.5">
           {state.clues.map((clue) =>
             clue.open ? (
               <li
@@ -230,19 +289,5 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
         </div>
       </form>
     </>
-  );
-}
-
-export function StreakPill({ count }: { count: number }) {
-  const t = useTranslations("header");
-  return (
-    <p
-      className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-full bg-black/25 px-3.5 font-display text-lg text-card"
-      aria-label={t("streak", { count })}
-      title={t("streak", { count })}
-    >
-      <FlameIcon className="text-gold" />
-      <span aria-hidden>{count}</span>
-    </p>
   );
 }

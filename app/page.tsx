@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Game } from "@/components/Game";
 import { LeatherHeader } from "@/components/LeatherHeader";
-import { buildState, getPuzzle } from "@/lib/game/service";
+import { getPuzzle, getState } from "@/lib/game/service";
 import { currentPlayerId } from "@/lib/player";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function TodayPage() {
 
   const playerId = await currentPlayerId();
   // O estado público só traz pistas abertas e só revela a pessoa depois do fim.
-  const state = await buildState(playerId, puzzle);
+  const state = await getState(playerId, puzzle);
   return <Game key={puzzle.number} initial={state} />;
 }
 

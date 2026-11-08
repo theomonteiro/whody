@@ -48,9 +48,28 @@
     "sending": "Chutando…",
     "wrong": "“{guess}” não é. Pista {next} liberada.",
     "repeated": "Você já tentou “{guess}”.",
+    "timeout": "Tempo esgotado! Pista {next} liberada.",
+    "timeLeftLabel": "Tempo da pista",
+    "secondsShort": "{seconds}s",
+    "timeLeft": "{seconds, plural, one {# segundo} other {# segundos}}",
     "empty": "Digite um nome antes de chutar.",
     "stale": "O dia virou! Carregando a próxima pessoa…",
     "error": "Não deu pra enviar. Tente de novo."
+  },
+  "start": {
+    "annotation": "quem fez isso?",
+    "mystery": "Figurinha misteriosa",
+    "title": "A pessoa de hoje vale até {points} pts",
+    "rulesTitle": "Como funciona",
+    "rule1": "6 pistas, da mais difícil à mais fácil.",
+    "rule2": "{seconds} segundos por pista. Acabou o tempo ou errou, abre a próxima.",
+    "rule3": "Quanto antes acertar, mais rara a figurinha.",
+    "ladderLabel": "Pontos por pista",
+    "ladderItem": "Pista {position}: figurinha {rarity}, {points} pontos",
+    "begin": "Começar",
+    "starting": "Começando…",
+    "hint": "O cronômetro só começa quando você tocar.",
+    "error": "Não deu pra começar. Tente de novo."
   },
   "noPuzzle": {
     "annotation": "folga!",
@@ -83,6 +102,7 @@
     "squaresLabel": "Seu caminho: {path}",
     "squareMiss": "errou",
     "squareHit": "acertou",
+    "squareTimeout": "tempo esgotado",
     "squareUnopened": "não abriu",
     "text": "whody #{number}\n{squares}\n{points} pts · {rarity}\n{url}"
   },

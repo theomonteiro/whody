@@ -1,6 +1,10 @@
 // Regras do jogo compartilhadas entre servidor e cliente (sem conteúdo secreto).
 
 export const CLUE_COUNT = 6;
+/** Segundos por pista. Mude aqui pra ajustar o jogo inteiro (servidor, barra e tela de início). */
+export const CLUE_SECONDS = 25;
+/** Tolerância de latência: um palpite até esse tanto depois do prazo ainda vale pra pista. */
+export const GRACE_MS = 1500;
 export const POINTS_BY_CLUE = [100, 80, 60, 40, 20, 5] as const;
 export const WEEK_MAX_POINTS = 700;
 
@@ -50,14 +54,17 @@ export function nextAlbumGoal(
 
 export const METALLIC: ReadonlySet<Rarity> = new Set(["platinum", "gold", "silver", "bronze"]);
 
-export type ShareSquare = "miss" | "hit" | "unopened";
+export type ShareSquare = "miss" | "hit" | "timeout" | "unopened";
 
-/** Fileira de 6 quadrados: vermelho = errou, verde = acertou, bege = não abriu. */
-export function shareSquares(attemptsCorrect: readonly boolean[]): ShareSquare[] {
+/**
+ * Fileira de 6 quadrados: vermelho = errou, preto = tempo esgotado, verde = acertou, bege = não abriu.
+ * Palpites repetidos não entram nas tentativas, então cada tentativa é uma pista.
+ */
+export function shareSquares(attempts: readonly { correct: boolean; timeout?: boolean }[]): ShareSquare[] {
   const squares: ShareSquare[] = [];
   for (let i = 0; i < CLUE_COUNT; i++) {
-    const attempt = attemptsCorrect[i];
-    squares.push(attempt === undefined ? "unopened" : attempt ? "hit" : "miss");
+    const a = attempts[i];
+    squares.push(!a ? "unopened" : a.correct ? "hit" : a.timeout ? "timeout" : "miss");
   }
   return squares;
 }
@@ -65,5 +72,18 @@ export function shareSquares(attemptsCorrect: readonly boolean[]): ShareSquare[]
 export const SHARE_EMOJI: Record<ShareSquare, string> = {
   miss: "🟥",
   hit: "🟩",
+  timeout: "⬛",
   unopened: "⬜",
 };
+
+export type Screen = "no-puzzle" | "start" | "game" | "result";
+
+/** Qual tela abrir: início (não começou), jogo (em andamento) ou resultado (terminou). */
+export function screenFor(
+  hasPuzzle: boolean,
+  play: { started: boolean; finished: boolean } | null,
+): Screen {
+  if (!hasPuzzle) return "no-puzzle";
+  if (!play?.started) return "start";
+  return play.finished ? "result" : "game";
+}

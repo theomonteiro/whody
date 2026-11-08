@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { albumRarity, nextAlbumGoal, pointsForClue, rarityForClue, shareSquares } from "./rules";
+import { albumRarity, nextAlbumGoal, pointsForClue, rarityForClue, screenFor, shareSquares } from "./rules";
 
 describe("pontos e figurinhas", () => {
   it("dá pontos e raridade pela pista do acerto", () => {
@@ -31,8 +31,34 @@ describe("álbum semanal", () => {
 });
 
 describe("compartilhar", () => {
+  const miss = { correct: false };
+  const hit = { correct: true };
+  const timeout = { correct: false, timeout: true };
+
   it("monta a fileira de quadrados", () => {
-    expect(shareSquares([false, true])).toEqual(["miss", "hit", "unopened", "unopened", "unopened", "unopened"]);
-    expect(shareSquares([false, false, false, false, false, false])).toEqual(Array(6).fill("miss"));
+    expect(shareSquares([miss, hit])).toEqual(["miss", "hit", "unopened", "unopened", "unopened", "unopened"]);
+    expect(shareSquares(Array(6).fill(miss))).toEqual(Array(6).fill("miss"));
+  });
+
+  it("diferencia tempo esgotado de erro", () => {
+    expect(shareSquares([timeout, miss, hit])).toEqual(["timeout", "miss", "hit", "unopened", "unopened", "unopened"]);
+  });
+});
+
+describe("qual tela abrir", () => {
+  it("sem pessoa agendada, mostra 'Sem pessoa hoje'", () => {
+    expect(screenFor(false, null)).toBe("no-puzzle");
+  });
+
+  it("sem partida, mostra a tela de início", () => {
+    expect(screenFor(true, null)).toBe("start");
+  });
+
+  it("partida em andamento vai direto pro jogo", () => {
+    expect(screenFor(true, { started: true, finished: false })).toBe("game");
+  });
+
+  it("partida terminada vai direto pro resultado", () => {
+    expect(screenFor(true, { started: true, finished: true })).toBe("result");
   });
 });

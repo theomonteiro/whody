@@ -8,7 +8,15 @@ import type { GameState } from "@/lib/game/types";
 const SQUARE_CLASS: Record<ShareSquare, string> = {
   miss: "bg-stamp",
   hit: "bg-hit",
+  timeout: "bg-ink",
   unopened: "bg-beige",
+};
+
+const SQUARE_LABEL: Record<ShareSquare, string> = {
+  miss: "share.squareMiss",
+  hit: "share.squareHit",
+  timeout: "share.squareTimeout",
+  unopened: "share.squareUnopened",
 };
 
 async function copy(text: string): Promise<boolean> {
@@ -34,13 +42,11 @@ export function ShareCard({ state }: { state: GameState }) {
   const t = useTranslations();
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
 
-  const squares = shareSquares(state.attempts.map((a) => a.correct));
+  const squares = shareSquares(state.attempts);
   const rarity = rarityForClue(state.solvedAtClue);
   const rarityName = t(rarity ? `rarity.${rarity}` : "rarity.empty");
   const path = `/s/${state.puzzle.number}/${rarity ?? "empty"}`;
-  const pathLabel = squares
-    .map((s) => t(s === "miss" ? "share.squareMiss" : s === "hit" ? "share.squareHit" : "share.squareUnopened"))
-    .join(", ");
+  const pathLabel = squares.map((s) => t(SQUARE_LABEL[s])).join(", ");
 
   async function onShare() {
     const text = t("share.text", {
