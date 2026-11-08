@@ -6,12 +6,13 @@ import type { Rarity } from "./game/rules";
  * (os SVGs em public/portraits misturam --portrait-ink com --portrait-paper em 7 tons).
  */
 export const PORTRAIT_TONES: Record<Rarity | "mystery", { bg: string; bust: string; ink: string }> = {
-  diamond: { bg: "#DCF1F3", bust: "#557A82", ink: "#1E3A41" },
-  platinum: { bg: "#DDE3EA", bust: "#6A7787", ink: "#27303C" },
-  gold: { bg: "#F6E6BC", bust: "#866A2F", ink: "#3D2E0E" },
-  silver: { bg: "#E3E5E9", bust: "#767B84", ink: "#2F3238" },
-  bronze: { bg: "#F2DACA", bust: "#8C5D43", ink: "#41261A" },
-  common: { bg: "#EEE8DD", bust: "#6B6258", ink: "#241C17" },
+  // ink/bg seguem o CLAUDE.md ("Retratos"); bust é só do busto genérico.
+  diamond: { bg: "#DDF1F4", bust: "#557A82", ink: "#2F4A55" },
+  platinum: { bg: "#DDE4EC", bust: "#6A7787", ink: "#33404F" },
+  gold: { bg: "#F6E7BE", bust: "#866A2F", ink: "#5A4214" },
+  silver: { bg: "#E4E6E9", bust: "#767B84", ink: "#3E4248" },
+  bronze: { bg: "#F0D9C6", bust: "#8C5D43", ink: "#5A3420" },
+  common: { bg: "#ECE5D7", bust: "#6B6258", ink: "#4A3F36" },
   mystery: { bg: "#2E241D", bust: "#4A3B30", ink: "#120D0A" },
 };
 
