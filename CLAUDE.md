@@ -29,8 +29,12 @@ Normaliza (NFD, sem acento, minúsculas, só [a-z0-9] e espaço). Levenshtein do
 - Next.js (App Router) + TypeScript estrito, Tailwind com os tokens como variáveis CSS, Vitest.
 - Banco: Postgres do Supabase via DATABASE_URL (sem supabase-js pro jogo). RLS ligado sem políticas. A Data API do Supabase está DESLIGADA.
 - Local: Session pooler (porta 5432). Vercel: Transaction pooler (porta 6543), prepared statements desligados, funções em gru1 (São Paulo, fixado em vercel.json). Banco em sa-east-1.
-- Testes que escrevem no banco (migrations novas, contas, grupos, partidas de teste) rodam num banco de desenvolvimento (outro projeto Supabase ou Postgres local), nunca no de produção. Migration nova só vai pra produção com aprovação do Theo.
-- Migrations em supabase/migrations. `npm run db:migrate` e `npm run db:seed`. Sempre rodar a migration ANTES do deploy que depende dela.
+- Só existe um banco: o de produção (o .env.local local também aponta pra ele).
+- Migrations só adicionam (tabelas e colunas novas). Nunca renomear nem apagar tabela ou coluna.
+- Avise o Theo antes de rodar qualquer migration e espere o ok.
+- Testes automatizados (Vitest) não gravam no banco: a lógica que eles cobrem é pura ou recebe os dados prontos.
+- Dados de teste manuais (jogadores, partidas) ficam num grupo chamado "teste" e são apagados no fim.
+- Migrations em supabase/migrations. `npm run db:migrate` e `npm run db:seed`. Sempre rodar a migration ANTES do deploy que depende dela (e só depois do ok do Theo).
 - i18n com next-intl. Todo texto de interface em messages/pt-BR.json, nada escrito direto nos componentes. Pistas e nomes têm campo de idioma.
 - Deploy automático na Vercel a cada push na main. Trabalhe numa branch por tarefa e faça merge na main no fim.
 
