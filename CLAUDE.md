@@ -32,11 +32,30 @@ Normaliza (NFD, sem acento, minúsculas, só [a-z0-9] e espaço). Levenshtein do
 - Só existe um banco: o de produção (o .env.local local também aponta pra ele).
 - Migrations só adicionam (tabelas e colunas novas). Nunca renomear nem apagar tabela ou coluna.
 - Avise o Theo antes de rodar qualquer migration e espere o ok.
-- Testes automatizados (Vitest) não gravam no banco: a lógica que eles cobrem é pura ou recebe os dados prontos.
+- Testes automatizados (Vitest) não gravam no banco: a lógica que eles cobrem é pura, recebe os dados prontos ou roda no PGlite em memória (lib/test-db.ts).
 - Dados de teste manuais (jogadores, partidas) ficam num grupo chamado "teste" e são apagados no fim.
 - Migrations em supabase/migrations. `npm run db:migrate` e `npm run db:seed`. Sempre rodar a migration ANTES do deploy que depende dela (e só depois do ok do Theo).
 - i18n com next-intl. Todo texto de interface em messages/pt-BR.json, nada escrito direto nos componentes. Pistas e nomes têm campo de idioma.
 - Deploy automático na Vercel a cada push na main. Trabalhe numa branch por tarefa e faça merge na main no fim.
+
+## Contas e grupos
+
+- Login com Google pelo Supabase Auth, só no servidor (@supabase/ssr, fluxo PKCE: /auth/entrar → Google → /auth/callback; sair = POST /auth/sair). O Auth não depende da Data API. O jogo e os grupos continuam na DATABASE_URL.
+- Jogar não exige conta. Conta só pra criar ou entrar em grupo (e guardar o histórico entre aparelhos).
+- Ao logar, o anônimo do cookie é ligado à conta (lib/account/link.ts): conta nova = o próprio anônimo vira a conta; conta que já existe = as partidas passam pra ela e, no mesmo dia, fica a que terminou primeiro (terminada ganha de não terminada; empate = a da conta). A que perdeu fica no anônimo, marcado com players.merged_into. Nada é apagado.
+- Jogador atual (lib/player.ts, getViewer): logado = jogador da conta; deslogado = o cookie, só se ele não pertencer a uma conta. Sair troca o cookie.
+- Primeiro login pede o nome (sugere o primeiro nome do Google), até 20 letras. Avatar = iniciais sobre uma cor fixa pelo id (lib/avatar.ts).
+- Grupo: nome até 40 letras, convite /convite/<código de 8 letras sem 0/O/1/I/L>, até 20 grupos por jogador. Sair apaga só a linha em group_members.
+- Toda consulta de grupo confere se o jogador é membro (lib/groups/queries.ts). Quem não é membro recebe 404, igual a grupo inexistente. O convite mostra só o nome do grupo.
+- A tela do grupo e o perfil nunca leem a tabela people: nada de nome ou retrato da pessoa do dia, nem pra quem já terminou. Figurinha no grupo = busto genérico no tom da raridade.
+
+## Rankings (lib/groups/queries.ts e lib/groups/ranking.ts)
+
+- Diário = hoje. Semanal = segunda a hoje. Mensal = dia 1 a hoje. Todo período = soma, média por dia jogado e álbuns Diamante (semanas com 601+). Datas são as de daily_puzzles (já em Brasília); hoje = gameDate().
+- Uma partida conta se terminou ou se é de dia que já passou (view play_results; abandonada = 0 pts e 150 s).
+- Desempate: 1) pontos, 2) figurinhas Diamante no período, 3) maior streak dentro do período, 4) menor tempo total de resposta (finished_at − started_at). Tudo igual = mesma posição. A linha explicando só aparece quando há empate de pontos entre quem jogou.
+- Sem realtime: calcula ao abrir a tela.
+- Testes de SQL rodam no PGlite (Postgres em memória, lib/test-db.ts) com as migrations reais. Nunca no banco.
 
 ## Conteúdo
 
@@ -61,6 +80,6 @@ Normaliza (NFD, sem acento, minúsculas, só [a-z0-9] e espaço). Levenshtein do
 ## Fases
 
 1. Feita: jogo do dia, cronômetro, tela de início, figurinha e álbum, compartilhamento, retratos.
-2. Agora: login, grupos com convite, rankings (diário, semanal, mensal, todo período), streak e desempate, coleção de álbuns.
+2. Feita: login, grupos com convite, rankings (diário, semanal, mensal, todo período), streak e desempate, perfil com coleção de álbuns.
 3. Depois: tela de admin de pistas, mais retratos.
 4. Depois: segunda língua, Whody Anime.
