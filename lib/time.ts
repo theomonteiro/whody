@@ -84,3 +84,27 @@ export function midnightAt(iso: string): number {
 export function nextPuzzleAt(at: Date = new Date()): number {
   return midnightAt(addDays(gameDate(at), 1));
 }
+
+/** Primeiro dia do mês da data. */
+export function monthStart(iso: string): string {
+  return `${iso.slice(0, 7)}-01`;
+}
+
+export type Period = "day" | "week" | "month" | "all";
+
+/**
+ * Intervalo de datas (inclusivo) de cada ranking até `today`: diário = hoje; semanal = segunda
+ * a hoje; mensal = dia 1 a hoje; todo período = desde o #1.
+ */
+export function periodRange(period: Period, today: string): { from: string; to: string } {
+  switch (period) {
+    case "day":
+      return { from: today, to: today };
+    case "week":
+      return { from: weekStart(today), to: today };
+    case "month":
+      return { from: monthStart(today), to: today };
+    case "all":
+      return { from: PUZZLE_EPOCH, to: today };
+  }
+}

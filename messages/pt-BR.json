@@ -27,9 +27,10 @@
     "dayAndDate": "Nº {number} · {date}",
     "streak": "{count, plural, one {# dia seguido} other {# dias seguidos}}",
     "album": "Álbum da semana",
-    "group": "Grupo (em breve)",
+    "group": "Grupos",
     "back": "Voltar pro jogo",
-    "nextIn": "próxima em <time></time>"
+    "nextIn": "próxima em <time></time>",
+    "streakLink": "{count, plural, one {# dia seguido} other {# dias seguidos}}, abrir perfil"
   },
   "game": {
     "annotation": "quem fez isso?",
@@ -139,6 +140,135 @@
     "annotation": "alguém pegou essa figurinha",
     "title": "whody #{number}",
     "body": "Todo dia uma pessoa, 6 pistas. Quanto antes acertar, mais rara a figurinha.",
+    "play": "Jogar o whody de hoje"
+  },
+  "login": {
+    "metaTitle": "Entrar · whody?",
+    "title": "Entrar",
+    "annotation": "bora jogar junto?",
+    "heading": "Entre pra criar ou participar de grupos",
+    "why1": "Rankings da semana, do mês e de todo período com seus amigos.",
+    "why2": "Sua streak e seus álbuns guardados, em qualquer aparelho.",
+    "why3": "O que você já jogou neste aparelho vai junto pra conta.",
+    "google": "Entrar com o Google",
+    "noAccountNeeded": "Pra jogar o dia não precisa de conta.",
+    "error": "Não deu pra entrar. Tente de novo.",
+    "errorConfig": "O login ainda não está configurado neste site."
+  },
+  "welcome": {
+    "annotation": "bem-vindo!",
+    "title": "Como você quer aparecer nos grupos?",
+    "body": "Seus amigos veem esse nome no ranking. Dá pra mudar depois no perfil.",
+    "nameLabel": "Seu nome",
+    "save": "Salvar e continuar",
+    "error": "Escreva um nome de até {max} letras."
+  },
+  "groups": {
+    "metaTitle": "Grupos · whody?",
+    "title": "Seus grupos",
+    "members": "{count, plural, one {# pessoa} other {# pessoas}}",
+    "emptyAnnotation": "sozinho não tem graça",
+    "emptyBody": "Crie um grupo e mande o link pros amigos, ou entre com um código.",
+    "createTitle": "Criar grupo",
+    "nameLabel": "Nome do grupo",
+    "namePlaceholder": "Ex.: Família, Firma, Rolê",
+    "createButton": "Criar grupo",
+    "joinTitle": "Tenho um convite",
+    "joinBody": "Abra o link que te mandaram ou digite o código dele.",
+    "codeLabel": "Código do convite",
+    "joinButton": "Ver convite",
+    "left": "Você saiu do grupo.",
+    "error": {
+      "nome": "Escreva um nome de até 40 letras.",
+      "limite": "Você já está em grupos demais (máximo 20).",
+      "codigo": "Esse convite não existe. Confira o código."
+    }
+  },
+  "group": {
+    "metaTitle": "Grupo · whody?",
+    "backToGroups": "Voltar pros grupos",
+    "memberCount": "{count, plural, one {# pessoa} other {# pessoas}}",
+    "noName": "Sem nome",
+    "you": "(você)",
+    "pts": "pts",
+    "points": "{points} pts",
+    "positionLabel": "{position}º lugar",
+    "topStreakTitle": "Maior streak do grupo",
+    "topStreakNone": "Ninguém em sequência ainda.",
+    "yourStreak": "Você",
+    "days": "{count, plural, one {# dia} other {# dias}}",
+    "periodsLabel": "Período do ranking",
+    "tab": {
+      "week": "Semanal",
+      "month": "Mensal",
+      "all": "Todo período"
+    },
+    "rankingTitle": {
+      "week": "Ranking da semana",
+      "month": "Ranking do mês",
+      "all": "Ranking de todo período"
+    },
+    "weekAlbumLabel": "Álbum {rarity} da semana",
+    "allTimeExtra": "média {average}/dia · {albums, plural, =0 {nenhum álbum Diamante} one {# álbum Diamante} other {# álbuns Diamante}}",
+    "tieLine": "Empate em {points} pts entre {names}: decidido por {criteria}.",
+    "tieExact": "Empate em {points} pts entre {names}: empatados em tudo, mesma posição.",
+    "tieRule": "Desempate: pontos, figurinhas Diamante no período, maior streak no período e menor tempo total de resposta.",
+    "tie": {
+      "diamonds": "figurinhas Diamante",
+      "streak": "maior streak",
+      "time": "menor tempo de resposta"
+    },
+    "todayTitle": "Hoje · #{number}",
+    "todayNoPuzzle": "Hoje sem pessoa",
+    "solvedAt": "na {clue}ª pista",
+    "failedAll": "errou as 6",
+    "stickerOf": "figurinha {rarity}",
+    "pending": "pendente",
+    "inviteFirstAnnotation": "grupo criado!",
+    "inviteFirstTitle": "Agora chame a turma",
+    "inviteFirstBody": "Mande o link: quem abrir entra com o Google e já cai no grupo.",
+    "inviteTitle": "Convidar",
+    "inviteBody": "Quem tiver o link pode entrar no grupo.",
+    "inviteButton": "Compartilhar convite",
+    "inviteCopied": "Link copiado!",
+    "inviteCopyFailed": "Não deu pra copiar. Segure o link pra copiar.",
+    "inviteText": "Entra no grupo {name} do whody! Todo dia uma pessoa, 6 pistas.",
+    "leaveSummary": "Sair do grupo",
+    "leaveConfirmBody": "Você some do ranking deste grupo. Pra voltar, precisa do convite de novo.",
+    "leaveConfirm": "Sair do grupo"
+  },
+  "invite": {
+    "metaTitle": "Convite · whody?",
+    "annotation": "te chamaram pro grupo",
+    "body": "Todo dia uma pessoa, 6 pistas. No grupo vocês comparam pontos, figurinhas e streaks.",
+    "join": "Entrar no grupo",
+    "loginToJoin": "Entrar com o Google pra participar",
+    "loginHint": "Pra jogar o dia não precisa de conta; pro grupo, sim.",
+    "notFoundTitle": "Convite não encontrado",
+    "notFoundBody": "Esse link não leva a nenhum grupo. Peça um novo pra quem te convidou.",
+    "play": "Jogar o whody de hoje"
+  },
+  "profile": {
+    "metaTitle": "Perfil · whody?",
+    "title": "Perfil",
+    "anonymous": "Jogando sem conta",
+    "anonymousHint": "Seu histórico fica só neste aparelho.",
+    "accountHint": "Histórico guardado na sua conta.",
+    "currentStreak": "streak atual",
+    "bestStreak": "maior streak",
+    "login": "Entrar com o Google",
+    "collectionTitle": "Coleção de álbuns",
+    "collectionEmpty": "Os álbuns das semanas fechadas aparecem aqui.",
+    "albumWeek": "nº {week}",
+    "albumLabel": "Álbum nº {week}, {range}: {rarity}, {points} pontos",
+    "accountTitle": "Conta",
+    "saveName": "Salvar nome",
+    "saved": "Nome salvo.",
+    "logout": "Sair da conta"
+  },
+  "notFound": {
+    "title": "Nada por aqui",
+    "body": "Essa página não existe ou você não tem acesso a ela.",
     "play": "Jogar o whody de hoje"
   }
 }

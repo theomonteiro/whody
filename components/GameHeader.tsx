@@ -4,9 +4,10 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { GameState } from "@/lib/game/types";
 import { dateFromIso } from "@/lib/site";
 import { BookIcon, ChartIcon, FlameIcon } from "./icons";
-import { HeaderDisabledButton, HeaderLink, LeatherHeader } from "./LeatherHeader";
+import Link from "next/link";
+import { HeaderLink, LeatherHeader } from "./LeatherHeader";
 
-/** Cabeçalho de couro do dia: logo, nº e data, streak, álbum e grupo (em breve). */
+/** Cabeçalho de couro do dia: logo, nº e data, streak (abre o perfil), álbum e grupos. */
 export function GameHeader({ state }: { state: GameState }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -25,9 +26,9 @@ export function GameHeader({ state }: { state: GameState }) {
       <HeaderLink href="/album" label={t("header.album")}>
         <BookIcon />
       </HeaderLink>
-      <HeaderDisabledButton label={t("header.group")}>
+      <HeaderLink href="/grupos" label={t("header.group")}>
         <ChartIcon />
-      </HeaderDisabledButton>
+      </HeaderLink>
     </LeatherHeader>
   );
 }
@@ -35,13 +36,14 @@ export function GameHeader({ state }: { state: GameState }) {
 function StreakPill({ count }: { count: number }) {
   const t = useTranslations("header");
   return (
-    <p
-      className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-full bg-black/25 px-3.5 font-display text-lg text-card"
-      aria-label={t("streak", { count })}
+    <Link
+      href="/perfil"
+      className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-full bg-black/25 px-3.5 font-display text-lg text-card transition hover:bg-black/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+      aria-label={t("streakLink", { count })}
       title={t("streak", { count })}
     >
       <FlameIcon className="text-gold" />
       <span aria-hidden>{count}</span>
-    </p>
+    </Link>
   );
 }

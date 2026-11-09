@@ -4,7 +4,10 @@ import { db } from "@/lib/db";
 import { defaultLocale } from "@/i18n/config";
 import { gameDate, isoWeekNumber, nextPuzzleAt, weekDates } from "@/lib/time";
 import { applyGuess, clueDeadline, currentClue, expire, pointsOf, type Attempt, type Timeline } from "./clock";
+import { appDb } from "@/lib/app-db";
+import { playerStreakDays } from "@/lib/groups/queries";
 import { judgeGuess, normalize } from "./judge";
+import { streakStats, type StreakStats } from "./streak";
 import { CLUE_COUNT, pointsForClue } from "./rules";
 import type { Album, AlbumDay, GameState, GameStatus, GuessOutcome, GuessResponse, PublicClue } from "./types";
 
@@ -99,25 +102,13 @@ export async function getState(playerId: string | null, puzzle: Puzzle): Promise
 }
 
 export async function getStreak(playerId: string | null, today: string = gameDate()): Promise<number> {
-  if (!playerId) return 0;
-  // Dias seguidos jogados (acertando ou não), contados sobre os dias que tiveram pessoa.
-  // Dia passado com partida começada conta como jogado: o cronômetro já esgotou tudo.
-  // O dia de hoje ainda sem fim não quebra a sequência.
-  const rows = await db()<{ date: string; started: boolean; finished: boolean }[]>`
-    select d.date::text as date, (p.player_id is not null) as started, (p.finished_at is not null) as finished
-    from daily_puzzles d
-    left join plays p on p.puzzle_number = d.number and p.player_id = ${playerId}
-    where d.date <= ${today}
-    order by d.date desc
-    limit 1000`;
-  let streak = 0;
-  for (const row of rows) {
-    const done = row.date === today ? row.finished : row.started;
-    if (done) streak++;
-    else if (row.date === today) continue;
-    else break;
-  }
-  return streak;
+  return (await getStreakStats(playerId, today)).current;
+}
+
+/** Streak atual e maior streak (regras em lib/game/streak.ts). */
+export async function getStreakStats(playerId: string | null, today: string = gameDate()): Promise<StreakStats> {
+  if (!playerId) return { current: 0, best: 0 };
+  return streakStats(await playerStreakDays(appDb().exec, playerId, today), today);
 }
 
 async function weekPoints(playerId: string | null, today: string): Promise<number> {

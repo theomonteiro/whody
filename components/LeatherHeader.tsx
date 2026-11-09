@@ -29,11 +29,3 @@ export function HeaderBack({ href, label }: { href: string; label: string }) {
     </HeaderLink>
   );
 }
-
-export function HeaderDisabledButton({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <button type="button" disabled aria-label={label} title={label} className={`${square} cursor-not-allowed opacity-60`}>
-      {children}
-    </button>
-  );
-}

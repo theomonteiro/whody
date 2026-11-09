@@ -2,14 +2,16 @@
 
 Jogo diário de adivinhação de pessoas: todo dia uma pessoa, 6 pistas da mais obscura à mais óbvia. Quanto antes acertar, mais rara a figurinha; cada semana vira um álbum.
 
-Fase 1: jogo do dia, resultado e álbum semanal, jogador anônimo (cookie). Grupos ficam pra Fase 2 (as tabelas já existem).
+Fase 1: jogo do dia, resultado e álbum semanal, jogador anônimo (cookie).
+Fase 2: login com Google, grupos com convite, rankings (semanal, mensal, todo período) com desempate, perfil com streak e coleção de álbuns.
 
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript estrito, Tailwind 4 com os tokens em `app/globals.css`
 - Postgres do Supabase, acessado só pelo servidor (`postgres.js` + `DATABASE_URL`)
+- Supabase Auth (Google) pelo servidor com `@supabase/ssr`, só pro login
 - next-intl (só `pt-BR`, sem prefixo na URL), textos em `messages/pt-BR.json`
-- next/og pras prévias de link, Vitest pros testes
+- next/og pras prévias de link, Vitest pros testes (os de SQL rodam no PGlite, um Postgres em memória)
 
 ## Rodar localmente
 
@@ -19,7 +21,7 @@ Precisa de Node 20+ e de um Postgres. O jeito mais simples é usar o próprio pr
    ```bash
    npm install
    ```
-2. Copie `.env.example` para `.env.local` e preencha `DATABASE_URL`:
+2. Copie `.env.example` para `.env.local` e preencha `DATABASE_URL` (e, pro login, `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`):
    - No Supabase: **Project Settings → Database → Connection string**. Localmente, a "Session pooler" ou a conexão direta funcionam; na Vercel use a "Transaction pooler" (porta 6543).
    - Com Docker, também dá pra usar `npx supabase start` e a URL `postgresql://postgres:postgres@127.0.0.1:54322/postgres`.
 3. Crie as tabelas e carregue o conteúdo:
@@ -34,7 +36,7 @@ Precisa de Node 20+ e de um Postgres. O jeito mais simples é usar o próprio pr
 
 Outros comandos: `npm test` (testes), `npm run typecheck`, `npm run lint`, `npm run build`.
 
-Pra jogar de novo durante o desenvolvimento, apague o cookie `whody_pid` do navegador (vira outro jogador).
+Pra jogar de novo durante o desenvolvimento, apague o cookie `whody_pid` do navegador (vira outro jogador). Sem as variáveis do Supabase o site funciona, só o login fica desligado.
 
 ## Cadastrar pessoas
 
@@ -58,12 +60,34 @@ Regras do seed:
 
 Curva das pistas: 1 e 2 são curiosidades obscuras; 3 e 4 dão contexto (época, área, país); a 5 é algo marcante mas não óbvio; a 6 é o que todo mundo conhece. Nada que entregue a pessoa antes da 6.
 
+## Login com Google (configurar uma vez)
+
+O login usa o Supabase Auth, que funciona com a Data API desligada. Você vai precisar da URL do projeto Supabase (`https://<ref>.supabase.co`) e da URL de produção (ex. `https://whody.vercel.app`).
+
+1. **Google Cloud** ([console.cloud.google.com](https://console.cloud.google.com)), num projeto novo ou existente:
+   1. **APIs e serviços → Tela de consentimento OAuth** (ou "Google Auth Platform → Branding"): tipo **Externo**, nome `whody`, e-mail de suporte, domínio autorizado `vercel.app` (e o seu domínio, se tiver). Escopos: `openid`, `email`, `profile`. Depois, em **Público**, clique em **Publicar app** (em "teste" só os e-mails cadastrados conseguem entrar).
+   2. **Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web**:
+      - **Origens JavaScript autorizadas:** `http://localhost:3000` e a URL de produção.
+      - **URIs de redirecionamento autorizados:** só `https://<ref>.supabase.co/auth/v1/callback` (o Google volta pro Supabase, não pro site).
+   3. Copie o **ID do cliente** e a **chave secreta**.
+2. **Supabase → Authentication → Sign In / Providers → Google:** ative, cole o ID do cliente e a chave secreta, salve. (A "Callback URL" que aparece ali é a mesma do passo 1.2.)
+3. **Supabase → Authentication → URL Configuration:**
+   - **Site URL:** a URL de produção.
+   - **Redirect URLs** (pra onde o Supabase pode devolver depois do Google), adicione:
+     - `http://localhost:3000/auth/callback`
+     - `https://<sua-url-de-produção>/auth/callback`
+     - Pras prévias da Vercel: `https://*-<seu-time-ou-usuário>.vercel.app/auth/callback`
+4. **Supabase → Project Settings → API Keys:** copie a **publishable key** (`sb_publishable_…`) pra `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, e a URL do projeto pra `NEXT_PUBLIC_SUPABASE_URL`, no `.env.local` e na Vercel.
+
+Pra testar: abra `/entrar`, entre com o Google, escolha o nome e crie um grupo em `/grupos`.
+
 ## Deploy na Vercel
 
 1. Suba o repositório pro GitHub e importe na Vercel (framework detectado: Next.js).
 2. Em **Settings → Environment Variables**, defina:
    - `DATABASE_URL`: a connection string do **Transaction pooler** do Supabase (porta 6543).
-   - `NEXT_PUBLIC_SITE_URL` (opcional): a URL pública, ex. `https://whody.vercel.app`. Sem ela, o app usa a URL de produção da Vercel.
+   - `NEXT_PUBLIC_SITE_URL` (opcional): a URL pública, ex. `https://whody.vercel.app`. Sem ela, o app usa a URL de produção da Vercel. É a base dos links de convite.
+   - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: as do login (veja acima).
 3. Rode as migrations e o seed contra o banco de produção, da sua máquina:
    ```bash
    DATABASE_URL="postgresql://..." npm run db:migrate
@@ -80,16 +104,23 @@ Curva das pistas: 1 e 2 são curiosidades obscuras; 3 e 4 dão contexto (época,
 - **Compartilhar:** 🟥 errou, ⬛ tempo esgotado, 🟩 acertou, ⬜ não abriu.
 - **Corretor** (`lib/game/judge.ts`): normaliza (NFD, sem acento, minúsculas, só `[a-z0-9]`), mede Levenshtein até os nomes da resposta e de todas as outras pessoas; tolerância 0/1/2 pelo tamanho; acerto só dentro da tolerância e estritamente mais perto da resposta que de qualquer outra pessoa.
 - **Dia:** vira à meia-noite de `America/Sao_Paulo` (`lib/time.ts`). Álbum de segunda a domingo.
+- **Contas:** login com Google pelo servidor (`/auth/entrar` → Google → `/auth/callback`, PKCE). No callback, o jogador anônimo do cookie é ligado à conta (`lib/account/link.ts`): numa conta nova ele vira a conta; numa conta que já existe, as partidas passam pra ela e, se os dois jogaram o mesmo dia, fica a que terminou primeiro. A perdedora fica guardada no anônimo (`players.merged_into`). Sair (`POST /auth/sair`) troca o cookie, então o aparelho volta a ser um anônimo novo.
+- **Grupos:** `/grupos` (lista, criar, abrir convite), `/grupos/<id>` (tela do grupo, só membros; os outros recebem 404), `/convite/<código>` (mostra só o nome do grupo e pede login pra entrar). Tudo com server actions em `app/grupos/actions.ts`.
+- **Rankings:** SQL em `lib/groups/queries.ts` sobre a view `play_results` (soma por período com `filter`, álbuns Diamante com `date_trunc('week')`), ordem e desempate em `lib/groups/ranking.ts`. Desempate: pontos, figurinhas Diamante no período, maior streak no período, menor tempo total de resposta. A explicação só aparece quando há empate de verdade.
+- **Perfil:** `/perfil` (streak atual, maior streak, coleção dos álbuns das semanas anteriores, nome e sair). O círculo de streak do cabeçalho abre o perfil.
 - **Jogador:** id anônimo num cookie `httpOnly` criado em `proxy.ts`. Uma jogada por jogador e dia (`unique (player_id, puzzle_number)`).
 
 ## Estrutura
 
 ```
-app/                  páginas (jogo, álbum, link compartilhado), API e imagens de prévia
+app/                  páginas (jogo, álbum, grupos, convite, perfil, login), API, auth e imagens de prévia
 components/           Game, Result, ShareCard, Sticker, Portrait, LeatherHeader…
 content/people.ts     pessoas, pistas e agenda (fonte da verdade)
 i18n/                 configuração do next-intl
-lib/game/             regras, corretor, serviço do jogo (servidor) e tipos públicos
+lib/game/             regras, corretor, streak, serviço do jogo (servidor) e tipos públicos
+lib/groups/           grupos e rankings (SQL) e desempate
+lib/account/          ligação do anônimo à conta
+lib/supabase/         cliente do Supabase Auth (servidor)
 lib/time.ts           datas no fuso de Brasília
 messages/pt-BR.json   todo texto de interface
 scripts/              migrate e seed

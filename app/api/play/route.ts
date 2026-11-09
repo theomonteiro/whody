@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPuzzle, getState, startPlay } from "@/lib/game/service";
-import { currentPlayerId } from "@/lib/player";
+import { currentPlayerId, getViewer } from "@/lib/player";
+import { PLAYER_COOKIE, playerCookieOptions } from "@/lib/player-cookie";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,10 @@ export async function GET() {
 
 /** "Começar": cria a partida do dia e abre a pista 1. Idempotente. */
 export async function POST(request: Request) {
-  const playerId = await currentPlayerId();
+  const viewer = await getViewer();
+  // Cookie que pertence a uma conta (sessão expirou sem sair): este aparelho vira um anônimo novo.
+  const freshId = viewer.playerId || viewer.account ? null : crypto.randomUUID();
+  const playerId = viewer.playerId ?? freshId;
   if (!playerId) return NextResponse.json({ error: "no-player" }, { status: 401 });
 
   const body: unknown = await request.json().catch(() => null);
@@ -27,5 +31,7 @@ export async function POST(request: Request) {
 
   const state = await startPlay(playerId, puzzleNumber);
   if (!state) return NextResponse.json({ error: "stale" }, { status: 409, headers: noStore });
-  return NextResponse.json({ state }, { headers: noStore });
+  const response = NextResponse.json({ state }, { headers: noStore });
+  if (freshId) response.cookies.set(PLAYER_COOKIE, freshId, playerCookieOptions());
+  return response;
 }
