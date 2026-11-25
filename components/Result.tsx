@@ -5,7 +5,8 @@ import { useFormatter, useTranslations } from "next-intl";
 import { rarityForClue } from "@/lib/game/rules";
 import type { GameState } from "@/lib/game/types";
 import { Countdown } from "./Countdown";
-import { LeatherHeader } from "./LeatherHeader";
+import { ChartIcon } from "./icons";
+import { HeaderLink, LeatherHeader } from "./LeatherHeader";
 import { Portrait } from "./Portrait";
 import { ShareCard } from "./ShareCard";
 import { Sticker } from "./Sticker";
@@ -27,9 +28,12 @@ export function Result({ state }: { state: GameState }) {
         >
           {t("brand.logo")}
         </Link>
-        <p className="ml-auto font-mono text-sm font-bold text-gold">
+        <p className="ml-auto text-right font-mono text-sm leading-tight font-bold text-gold">
           {t.rich("header.nextIn", { time: () => <Countdown target={state.nextPuzzleAt} /> })}
         </p>
+        <HeaderLink href="/grupos" label={t("header.group")}>
+          <ChartIcon />
+        </HeaderLink>
       </LeatherHeader>
 
       <main className="flex flex-1 flex-col px-5 pt-7 pb-10">
@@ -85,6 +89,12 @@ export function Result({ state }: { state: GameState }) {
           className="mt-8 flex h-14 items-center justify-center rounded-2xl border-[1.5px] border-ink bg-card font-display text-lg text-ink transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stamp"
         >
           {t("result.albumButton")}
+        </Link>
+        <Link
+          href="/grupos"
+          className="mt-3 flex h-14 items-center justify-center rounded-2xl border-[1.5px] border-ink bg-card font-display text-lg text-ink transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stamp"
+        >
+          {t("result.groupsButton")}
         </Link>
 
         <details className="group mt-4">
