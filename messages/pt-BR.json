@@ -88,6 +88,7 @@
     "weekLabel": "na semana",
     "streakLabel": "{count, plural, one {dia seguido} other {dias seguidos}}",
     "albumButton": "Ver álbum da semana",
+    "groupsButton": "Ver ranking dos grupos",
     "learnMore": "Saiba mais sobre {name}",
     "clueSource": "{count, plural, one {fonte} other {fonte {n}}}",
     "clueSourceMissing": "fonte em breve",
