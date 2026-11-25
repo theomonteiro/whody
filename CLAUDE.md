@@ -6,7 +6,7 @@ Jogo diário de adivinhação: todo dia uma pessoa, 6 pistas da mais obscura (1)
 
 - Uma pessoa por dia, igual pra todos. O dia vira à meia-noite de America/Sao_Paulo.
 - Tela de início aparece só pra quem ainda não começou o dia. Quem começou e não terminou vai direto pro jogo; quem terminou vai direto pro resultado. Abrir a tela não inicia nada: só o botão "Começar".
-- Cada pista tem 25 segundos (constante CLUE_SECONDS). Errar ou esgotar o tempo abre a próxima pista. Sair ou recarregar não pausa.
+- Cada pista tem 30 segundos (constante CLUE_SECONDS). Errar ou esgotar o tempo abre a próxima pista. Sair ou recarregar não pausa.
 - Pontos pela pista do acerto: 100, 80, 60, 40, 20, 5. Errar as 6 = 0.
 - Figurinha pela mesma pista: Diamante, Platina, Ouro, Prata, Bronze, Comum. 0 pontos = espaço vazio.
 - Álbum semanal de segunda a domingo, 7 espaços, até 700 pts: 601–700 Diamante, 501–600 Platina, 401–500 Ouro, 301–400 Prata, 201–300 Bronze, 0–200 Comum. Exatamente 700 = Diamante com estrela.

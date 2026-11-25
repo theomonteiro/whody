@@ -32,7 +32,9 @@ export function Game({ initial }: { initial: GameState }) {
  * (o HTML do servidor mostra a barra cheia), e corrige a diferença entre os relógios.
  */
 function useRemaining(deadline: number | null, serverNow: number): number | null {
-  const [remaining, setRemaining] = useState<number | null>(null);
+  // Guarda de qual prazo é a medida: logo depois de abrir uma pista nova, a medida antiga (negativa,
+  // da pista que esgotou) não pode valer pra nova. Sem isso, a pista nova nascia "esgotada".
+  const [tick, setTick] = useState<{ deadline: number; ms: number } | null>(null);
   const skewRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ function useRemaining(deadline: number | null, serverNow: number): number | null
 
   useEffect(() => {
     if (deadline === null) return;
-    const tick = () => setRemaining(deadline - (Date.now() + (skewRef.current ?? 0)));
+    const tick = () => setTick({ deadline, ms: deadline - (Date.now() + (skewRef.current ?? 0)) });
     const first = setTimeout(tick, 0);
     const id = setInterval(tick, 200);
     document.addEventListener("visibilitychange", tick);
@@ -52,8 +54,11 @@ function useRemaining(deadline: number | null, serverNow: number): number | null
     };
   }, [deadline]);
 
-  return deadline === null ? null : remaining;
+  return deadline !== null && tick?.deadline === deadline ? tick.ms : null;
 }
+
+/** Intervalo entre tentativas de buscar a próxima pista enquanto o servidor ainda não a abriu. */
+const SYNC_RETRY_MS = 1000;
 
 function Board({ state, onState }: { state: GameState; onState: (s: GameState) => void }) {
   const t = useTranslations();
@@ -63,7 +68,6 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const newestClueRef = useRef<HTMLLIElement>(null);
-  const syncedFor = useRef<number | null>(null);
 
   const current = state.openClues;
   const rarity = rarityForClue(current)!;
@@ -78,25 +82,41 @@ function Board({ state, onState }: { state: GameState; onState: (s: GameState) =
   }
 
   // Quando o prazo + tolerância passa, pede ao servidor o estado com a próxima pista aberta.
-  // O texto do campo fica onde está.
+  // Repete a cada segundo até o servidor mudar de pista (ou terminar): se o relógio do aparelho
+  // estiver um pouco adiantado ou a rede falhar, a próxima tentativa resolve. O texto do campo fica.
   const deadline = state.clueDeadline;
   const expired = remaining !== null && remaining < -(GRACE_MS + 250);
   useEffect(() => {
-    if (!expired || pending || deadline === null || syncedFor.current === deadline) return;
-    syncedFor.current = deadline;
-    fetch("/api/play", { cache: "no-store" })
-      .then((res) => res.json() as Promise<{ state?: GameState }>)
-      .then(({ state: next }) => {
-        if (!next) return;
-        if (next.status === "playing" && next.openClues > current) {
-          setFeedback({ kind: "timeout", next: next.openClues });
-          showNewClue();
+    if (!expired || pending || deadline === null) return;
+    let alive = true;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const sync = async () => {
+      try {
+        const res = await fetch("/api/play", { cache: "no-store" });
+        if (res.status === 404) {
+          window.location.reload(); // o dia virou
+          return;
         }
-        onState(next);
-      })
-      .catch(() => {
-        syncedFor.current = null;
-      });
+        const { state: next } = (await res.json()) as { state?: GameState };
+        if (!alive) return;
+        if (next && (next.status !== "playing" || next.clueDeadline !== deadline)) {
+          if (next.status === "playing" && next.openClues > current) {
+            setFeedback({ kind: "timeout", next: next.openClues });
+            showNewClue();
+          }
+          onState(next);
+          return;
+        }
+      } catch {
+        // rede: tenta de novo
+      }
+      if (alive) retry = setTimeout(sync, SYNC_RETRY_MS);
+    };
+    sync();
+    return () => {
+      alive = false;
+      clearTimeout(retry);
+    };
   }, [expired, pending, deadline, current, onState]);
 
   async function submit(event: React.FormEvent) {
