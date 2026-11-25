@@ -2,7 +2,7 @@
 
 export const CLUE_COUNT = 6;
 /** Segundos por pista. Mude aqui pra ajustar o jogo inteiro (servidor, barra e tela de início). */
-export const CLUE_SECONDS = 25;
+export const CLUE_SECONDS = 30;
 /** Tolerância de latência: um palpite até esse tanto depois do prazo ainda vale pra pista. */
 export const GRACE_MS = 1500;
 export const POINTS_BY_CLUE = [100, 80, 60, 40, 20, 5] as const;
