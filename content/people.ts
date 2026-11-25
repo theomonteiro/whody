@@ -47,6 +47,27 @@ const BRITANNICA_SENNA = "https://www.britannica.com/biography/Ayrton-Senna";
 const HONDA_SENNA = "https://global.honda/en/F1/driver/AyrtonSenna/";
 const BRITANNICA_CLARICE = "https://www.britannica.com/biography/Clarice-Lispector";
 const FAPESP_CLARICE = "https://revistapesquisa.fapesp.br/a-escritora-das-entrelinhas/";
+const UZH_EINSTEIN = "https://uzh.ch/en/researchinnovation/excellence/nobelprize/einstein.html";
+const FAPESP_EINSTEIN_BERNA = "https://revistapesquisa.fapesp.br/ver-e-relativo/";
+const FAPESP_EINSTEIN_BRASIL = "https://revistapesquisa.fapesp.br/alfredo-tolmasquim-um-cientista-nos-tropicos/";
+const ENC_CARMEN = "https://www.encyclopedia.com/women/encyclopedias-almanacs-transcripts-and-maps/miranda-carmen-1909-1955";
+const USP_CARMEN = "https://sites.usp.br/portalatinoamericano/espanol-miranda-carmen";
+const ALESP_CARMEN = "https://www.al.sp.gov.br/noticia/?id=270370";
+const FUNDACAO_MANDELA = "https://www.nelsonmandela.org/content/page/biography";
+const CIDOB_MANDELA = "https://www.cidob.org/biografias_lideres_politicos/africa/sudafrica/nelson_mandela";
+const HISTORIA_MANDELA = "https://www.historiadomundo.com.br/idade-contemporanea/nelson-mandela.htm";
+const MUSEU_FRIDA = "https://www.museofridakahlo.org.mx/frida/?lang=en";
+const POMPIDOU_FRIDA = "https://www.centrepompidou.fr/en/magazine/article/focus-sur-the-frame-de-frida-kahlo";
+const NMWA_FRIDA = "https://www.nmwa.org/art/artists/frida-kahlo/";
+const ISTOE_PELE = "https://istoe.com.br/pele-nao-morre-pele-se-eterniza";
+const ESPN_PELE = "https://espndeportes.espn.com/futbol/nota/_/id/11303865/pele-leyenda-eterna-vida-pelicula-muerte";
+const BIOGRAPHY_PELE = "https://www.biography.com/athlete/pele";
+const PBS_AE_CHAPLIN = "https://www.pbs.org/wgbh/americanexperience/features/pickford-charlie-chaplin-1889-1977";
+const PBS_AM_CHAPLIN = "https://www.pbs.org/wnet/americanmasters/charlie-chaplin-biographical-timeline/14049";
+const ENC_CHAPLIN = "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/chaplin-charlie-sir-charles-spencer-1889-1977";
+const BIOGRAPHY_CHAPLIN = "https://www.biography.com/actors/charlie-chaplin";
+const USP_ELIS = "https://sites.usp.br/portalatinoamericano/espanol-elis-regina";
+const SESC_ELIS = "https://portal.sescsp.org.br/online/artigo/compartilhar/10645_UMA+ESTRELA+BRILHA";
 
 export const people: Person[] = [
   {
@@ -313,6 +334,265 @@ export const people: Person[] = [
       },
     ],
   },
+  {
+    id: "albert-einstein",
+    locale: "pt-BR",
+    displayName: "Albert Einstein",
+    acceptedNames: ["albert einstein", "einstein"],
+    shortBio: "Físico",
+    years: "1879–1955",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Em 1952, foi convidado para ser presidente de Israel e recusou.",
+        sources: [
+          "https://www.jewishvirtuallibrary.org/offering-the-presidency-of-israel-to-albert-einstein",
+          "https://www.jta.org/archive/embassy-reveals-details-of-offer-of-israel-presidency-to-einstein",
+        ],
+      },
+      {
+        text: "Em 1925, passou cerca de uma semana no Rio de Janeiro dando palestras em lugares como a Escola Politécnica e o Clube de Engenharia.",
+        sources: [
+          FAPESP_EINSTEIN_BRASIL,
+          "https://diariodorio.com/historias-do-rio-de-janeiro/2026/11/15/albert-einstein-passou-sete-dias-no-rio-e-deixou-desabafo-surpreendente-antes-de-ir-embora.html",
+        ],
+      },
+      {
+        text: "Trabalhou de 1902 a 1909 num escritório de patentes na Suíça, onde escreveu alguns de seus trabalhos mais importantes.",
+        sources: [UZH_EINSTEIN, FAPESP_EINSTEIN_BERNA],
+      },
+      {
+        text: "Nasceu em Ulm, na Alemanha, em 1879, e em 1933 emigrou para os Estados Unidos, de onde nunca mais voltou à Europa.",
+        sources: [UZH_EINSTEIN, FAPESP_EINSTEIN_BERNA],
+      },
+      {
+        text: "Ganhou o Nobel de Física de 1921 pela lei do efeito fotoelétrico, e não pela teoria que o deixou famoso.",
+        sources: [UZH_EINSTEIN],
+      },
+      {
+        text: "Criou a teoria da relatividade, da qual vem a equação E = mc².",
+        sources: [UZH_EINSTEIN, FAPESP_EINSTEIN_BERNA],
+      },
+    ],
+  },
+  {
+    id: "carmen-miranda",
+    locale: "pt-BR",
+    displayName: "Carmen Miranda",
+    acceptedNames: ["carmen miranda", "carmen", "pequena notavel"],
+    shortBio: "Cantora e atriz",
+    years: "1909–1955",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Antes da fama, aprendeu a fazer chapéus trabalhando numa loja no centro do Rio.",
+        sources: [ENC_CARMEN, USP_CARMEN, ALESP_CARMEN],
+      },
+      {
+        text: "Em 1945, foi a mulher mais bem paga dos Estados Unidos.",
+        sources: [ENC_CARMEN, ALESP_CARMEN],
+      },
+      {
+        text: "Nasceu em Portugal, em 1909, e veio para o Brasil ainda bebê.",
+        sources: [ENC_CARMEN, ALESP_CARMEN, USP_CARMEN],
+      },
+      {
+        text: "Em 1930, gravou Taí (Pra Você Gostar de Mim), o disco mais vendido do ano no Brasil.",
+        sources: [ENC_CARMEN, ALESP_CARMEN],
+      },
+      {
+        text: "Em 1939, foi contratada para um musical da Broadway e depois fez vários filmes em Hollywood.",
+        sources: [ENC_CARMEN, ALESP_CARMEN],
+      },
+      {
+        text: "Ficou famosa no mundo todo cantando com turbantes enfeitados com frutas.",
+        sources: [ENC_CARMEN, USP_CARMEN],
+      },
+    ],
+  },
+  {
+    id: "nelson-mandela",
+    locale: "pt-BR",
+    displayName: "Nelson Mandela",
+    acceptedNames: ["nelson mandela", "mandela", "madiba", "nelson rolihlahla mandela"],
+    shortBio: "Líder político",
+    years: "1918–2013",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Ganhou de uma professora da escola primária o nome inglês pelo qual o mundo o conheceu.",
+        sources: [FUNDACAO_MANDELA, CIDOB_MANDELA],
+      },
+      {
+        text: "Em 1952, abriu com um colega um dos primeiros escritórios de advocacia de juristas negros do seu país.",
+        sources: [FUNDACAO_MANDELA, CIDOB_MANDELA],
+      },
+      {
+        text: "Nasceu em 1918, numa aldeia onde o pai era conselheiro principal do rei do povo thembu.",
+        sources: [FUNDACAO_MANDELA, CIDOB_MANDELA],
+      },
+      {
+        text: "Condenado à prisão perpétua em 1964, passou os 18 anos seguintes numa prisão numa ilha perto da Cidade do Cabo.",
+        sources: [CIDOB_MANDELA, FUNDACAO_MANDELA],
+      },
+      {
+        text: "Em 1993, dividiu o Nobel da Paz com o presidente que negociou com ele o fim do apartheid.",
+        sources: [FUNDACAO_MANDELA, HISTORIA_MANDELA],
+      },
+      {
+        text: "Depois de 27 anos preso, virou em 1994 o primeiro presidente negro da África do Sul.",
+        sources: [HISTORIA_MANDELA, CIDOB_MANDELA],
+      },
+    ],
+  },
+  {
+    id: "frida-kahlo",
+    locale: "pt-BR",
+    displayName: "Frida Kahlo",
+    acceptedNames: ["frida kahlo", "frida", "kahlo"],
+    shortBio: "Pintora",
+    years: "1907–1954",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "O pai, nascido na Alemanha, era fotógrafo e construiu a casa onde ela nasceu e morou boa parte da vida.",
+        sources: [MUSEU_FRIDA, "https://visitmexico.com/en/destino/2116/museo-de-frida-kahlo"],
+      },
+      {
+        text: "Em 1939, expôs em Paris a convite de André Breton e dos surrealistas.",
+        sources: [POMPIDOU_FRIDA, "https://www.centrepompidou.fr/en/ressources/oeuvre/EaZN1kV"],
+      },
+      {
+        text: "No mesmo ano, o governo francês comprou um de seus autorretratos, hoje no Centre Pompidou, em Paris.",
+        sources: [MUSEU_FRIDA, "https://www.centrepompidou.fr/en/ressources/oeuvre/EaZN1kV"],
+      },
+      {
+        text: "Nasceu em 1907 em Coyoacán, na Cidade do México, numa casa que virou museu em 1958.",
+        sources: [
+          MUSEU_FRIDA,
+          NMWA_FRIDA,
+          "https://mexicocity.cdmx.gob.mx/venues/frida-kahlo-museum-casa-azul/?lang=en",
+        ],
+      },
+      {
+        text: "Casou-se duas vezes com o muralista Diego Rivera.",
+        sources: [MUSEU_FRIDA, NMWA_FRIDA, POMPIDOU_FRIDA],
+      },
+      {
+        text: "Pintora mexicana: das mais de 150 obras registradas, a maior parte são autorretratos.",
+        sources: [MUSEU_FRIDA, "https://artsandculture.google.com/story/jwXxfGRb93QdIA"],
+      },
+    ],
+  },
+  {
+    id: "pele",
+    locale: "pt-BR",
+    displayName: "Pelé",
+    acceptedNames: ["pele", "edson arantes do nascimento", "edson arantes", "rei pele"],
+    shortBio: "Jogador de futebol",
+    years: "1940–2022",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Em 1995, virou ministro do Esporte no governo Fernando Henrique Cardoso.",
+        sources: [ISTOE_PELE, ESPN_PELE],
+      },
+      {
+        text: "Quando criança, detestava o apelido que os amigos lhe deram, que teria vindo do nome de um goleiro.",
+        sources: [BIOGRAPHY_PELE, ESPN_PELE, ISTOE_PELE],
+      },
+      {
+        text: "Nasceu em Três Corações, Minas Gerais, em 1940, filho de um jogador de futebol.",
+        sources: [ESPN_PELE, BIOGRAPHY_PELE, ISTOE_PELE],
+      },
+      {
+        text: "Encerrou a carreira nos Estados Unidos, jogando pelo New York Cosmos de 1975 a 1977.",
+        sources: [ESPN_PELE, BIOGRAPHY_PELE],
+      },
+      {
+        text: "Em 1969, marcou de pênalti contra o Vasco, no Maracanã, o milésimo gol da carreira.",
+        sources: [
+          ISTOE_PELE,
+          ESPN_PELE,
+          "https://www.folhape.com.br/esportes/confira-como-foi-o-milesimo-gol-de-pele/252050/",
+        ],
+      },
+      {
+        text: "É o único jogador a ganhar três Copas do Mundo: 1958, 1962 e 1970.",
+        sources: [ISTOE_PELE, ESPN_PELE],
+      },
+    ],
+  },
+  {
+    id: "charlie-chaplin",
+    locale: "pt-BR",
+    displayName: "Charlie Chaplin",
+    acceptedNames: ["charlie chaplin", "chaplin", "charles chaplin", "charles spencer chaplin", "carlitos"],
+    shortBio: "Ator e cineasta",
+    years: "1889–1977",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Em 1952, viajou para a Europa e teve a volta aos Estados Unidos barrada. Passou o resto da vida na Suíça.",
+        sources: ["https://abajournal.com/magazine/article/1952_charlie_chaplin_exile", ENC_CHAPLIN, BIOGRAPHY_CHAPLIN],
+      },
+      {
+        text: "Em 1975, foi nomeado cavaleiro pela rainha Elizabeth II.",
+        sources: [PBS_AE_CHAPLIN, ENC_CHAPLIN, BIOGRAPHY_CHAPLIN],
+      },
+      {
+        text: "Nasceu em Londres, em 1889, filho de artistas de music hall, e chegou a viver num abrigo para pobres na infância.",
+        sources: [PBS_AM_CHAPLIN, BIOGRAPHY_CHAPLIN],
+      },
+      {
+        text: "Em 1919, fundou a United Artists com Mary Pickford, Douglas Fairbanks e D.W. Griffith.",
+        sources: [PBS_AE_CHAPLIN, PBS_AM_CHAPLIN, ENC_CHAPLIN],
+      },
+      {
+        text: "Em 1940, ridicularizou Hitler no filme O Grande Ditador.",
+        sources: [PBS_AM_CHAPLIN, BIOGRAPHY_CHAPLIN],
+      },
+      {
+        text: "Criou o Vagabundo, personagem do cinema mudo de chapéu-coco, bengala e bigodinho.",
+        sources: [PBS_AE_CHAPLIN, BIOGRAPHY_CHAPLIN],
+      },
+    ],
+  },
+  {
+    id: "elis-regina",
+    locale: "pt-BR",
+    displayName: "Elis Regina",
+    acceptedNames: ["elis regina", "elis"],
+    shortBio: "Cantora",
+    years: "1945–1982",
+    portraitUrl: null,
+    clues: [
+      {
+        text: "Gravou o primeiro LP em 1961, ainda com 15 anos.",
+        sources: [SESC_ELIS, USP_ELIS],
+      },
+      {
+        text: "Nasceu em Porto Alegre, em 1945, e começou criança num programa de calouros do rádio. Aos 13, já era contratada de uma emissora.",
+        sources: [SESC_ELIS, USP_ELIS],
+      },
+      {
+        text: "Em 1965, venceu um festival da TV Excelsior cantando Arrastão, de Edu Lobo e Vinicius de Moraes.",
+        sources: [USP_ELIS, SESC_ELIS],
+      },
+      {
+        text: "De 1965 a 1968, apresentou O Fino da Bossa, na TV Record, ao lado de Jair Rodrigues.",
+        sources: [USP_ELIS, SESC_ELIS],
+      },
+      {
+        text: "Em 1974, gravou nos Estados Unidos um disco com Tom Jobim que inclui Águas de Março.",
+        sources: [USP_ELIS, SESC_ELIS],
+      },
+      {
+        text: "Eternizou Como Nossos Pais e O Bêbado e a Equilibrista, que virou símbolo da luta pela anistia.",
+        sources: [SESC_ELIS, USP_ELIS],
+      },
+    ],
+  },
 ];
 
 /**
@@ -327,6 +607,13 @@ export const schedule: { date: string; personId: string }[] = [
   { date: "2026-11-11", personId: "marie-curie" },
   { date: "2026-11-12", personId: "ayrton-senna" },
   { date: "2026-11-13", personId: "clarice-lispector" },
+  { date: "2026-11-25", personId: "albert-einstein" },
+  { date: "2026-11-26", personId: "carmen-miranda" },
+  { date: "2026-11-27", personId: "nelson-mandela" },
+  { date: "2026-11-28", personId: "frida-kahlo" },
+  { date: "2026-11-29", personId: "pele" },
+  { date: "2026-11-30", personId: "charlie-chaplin" },
+  { date: "2026-12-01", personId: "elis-regina" },
 ];
 
 export function hasTodo(person: Person): boolean {
